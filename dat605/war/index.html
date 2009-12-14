@@ -1,0 +1,302 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>[proj name]</title>
+    
+	<link type="text/css" rel="stylesheet" href="Style/yui/tabview.css"/>
+	<link type="text/css" rel="stylesheet" href="Style/yui/menu.css"/>
+	<link type="text/css" rel="stylesheet" href="Style/yui/button.css"/>
+	<link type="text/css" rel="stylesheet" href="Style/yui/fonts-min.css"/>
+	<link type="text/css" rel="stylesheet" href="Style/yui/container.css"/>
+    
+	<script type="text/javascript" src="yui/yahoo-min.js"></script>
+	<script type="text/javascript" src="yui/yahoo-dom-event.js"></script>
+	<script type="text/javascript" src="yui/element-min.js"></script>
+	<script type="text/javascript" src="yui/connection-min.js"></script>
+	<script type="text/javascript" src="yui/button-min.js"></script>
+	<script type="text/javascript" src="yui/container-min.js"></script>
+	<script type="text/javascript" src="yui/dragdrop-min.js"></script>
+	<style>
+		body {
+			margin:0;
+			font-size:12pt;
+			font-family: Arial;
+		}
+	</style>
+  </head>
+  <body class="yui-skin-sam">
+	<script type="text/javascript">
+		var registerPanel,loginPanel = null;
+		YAHOO.namespace('DAT605');
+		YAHOO.util.Event.addListener(window, "load", function() {
+				var loadPage = new ajaxCall("mainContent","/load","testName");
+		});
+		
+		/**
+		  * removeElementFromDom - removes an element by its ID
+		  * Params - id (the id of the element to remove)
+		  */
+		var removeElementFromDom = function(id) {
+			var el = YAHOO.util.Dom.get(id);
+			if (el.parentNode) {
+				el.parentNode.removeChild(el);
+			}
+		};
+		
+		/**
+		  * ajaxCall
+		  * Params - id			 - id of the HTML object/element to update
+		  * 		 action		 - action to perform (location of servlet)
+		  *			 args		 - arguments to post for servlet to use
+		  */
+		var ajaxCall = function(id,action,args) {
+			var div = document.getElementById(id);
+			this.handleSuccess = function(o) {
+				if (o.responseText !== undefined) {
+					var d = o.responseText; // the text that is returned from the servlets
+					if (action === "/load") {
+						// a /load is expecting a return of an array
+						// true/false(logged in boolean), username
+						var dataArr = new Array();
+						dataArr = d.split(","); // get the array and split it by commas
+						// dataArr[0] = logged in true/false
+						// dataArr[1] = username (if dataArr[0] is true)
+						// loginPanel
+							loginPanel = new YAHOO.widget.Panel("loginWindow", 
+								{ width : "350px", close : false, underlay : "none", draggable : false, visible : false, constraintoviewport : true });
+							loginPanel.setHeader("Login");
+							loginPanel.render("mainContent");
+							loginPanel.center();
+						// (END) loginPanel
+						
+						// loginButton controls
+							var loginButton = new YAHOO.widget.Button({
+								label: "Login", 
+								id: "loginButton1", 
+								container: "loginWindow_content"
+							});
+							YAHOO.util.Dom.get("loadingMessage").style.display="none"; // hide the loading message
+							function loginButtonClick(onClickEvent) { // onclick function called when loginbutton is clicked
+								YAHOO.util.Dom.get("loadingMessage").style.display="block";
+								var errMsg = ""; // for showing error messages
+								var errWindow = YAHOO.util.Dom.get("loginWindow_error");
+							    var u = YAHOO.util.Dom.get("loginname");
+							    var p = YAHOO.util.Dom.get("loginpass");
+							    var uvalue = u.value;
+							    var pvalue = p.value;
+							    if (uvalue.length < 5) { // check the username
+								    u.style.backgroundColor = "pink";
+								    errMsg += "Invalid username format.<br/>";
+							    } else {
+							    	u.style.backgroundColor = "";
+							    }
+							    if (pvalue.length < 5) { // check the password
+								    p.style.backgroundColor = "pink";
+								    errMsg += "Invalid password format.<br/>";
+							    } else {
+							    	p.style.backgroundColor = "";
+							    }
+							    
+							    if (errMsg.length > 0) { // if there is an error message then don't submit
+							    	YAHOO.util.Dom.get("loadingMessage").style.display="none";
+							    	errWindow.style.display="block";
+							    	errWindow.innerHTML = errMsg;
+							    } else {
+							    	u.style.backgroundColor = "";
+							    	p.style.backgroundColor = "";
+							    	errWindow.style.display="none";
+							    	errWindow.innerHTML = "";
+							    	new ajaxCall("mainContent","/login",uvalue + "," + pvalue);
+							    }
+							}
+							loginButton.on("click", loginButtonClick); // set the event listener for the loginbutton
+						// (END) loginButton controls
+						
+						// registerPanel
+							registerPanel = new YAHOO.widget.Panel("registerPanel", 
+								{ zindex : 500, width : "550px", visible : false, constraintoviewport : true });
+							registerPanel.setHeader("Register for account");
+							registerPanel.render(document.body);
+							registerPanel.center();
+						// (END) registerPanel
+						
+						// submitRegButton controls
+							var submitRegButton = new YAHOO.widget.Button({
+								label: "Submit Registration", 
+								id: "submitRegButton1", 
+								container: "registerPanel_content"
+							});
+							function submitRegButtonClick(onClickEvent) { // onclick function called when loginbutton is clicked
+								YAHOO.util.Dom.get("loadingMessage").style.display="block";
+							    var u = YAHOO.util.Dom.get("regU");
+							    var p = YAHOO.util.Dom.get("regP");
+							    var fn = YAHOO.util.Dom.get("regFN");
+								var ln = YAHOO.util.Dom.get("regLN");
+								var uvalue = u.value;
+								var pvalue = p.value;
+								var fnvalue = fn.value;
+								var lnvalue = ln.value;
+								var errMsg = ""; // for showing error messages
+								var errWindow = YAHOO.util.Dom.get("registerPanel_error");
+							    if (uvalue.length < 5) { // check the username
+								    u.style.backgroundColor = "pink";
+								    errMsg += "Invalid username format.<br/>";
+							    } else {
+							    	u.style.backgroundColor = "";
+							    }
+							    if (pvalue.length < 5) { // check the password
+								    p.style.backgroundColor = "pink";
+								    errMsg += "Invalid password format.<br/>";
+							    } else {
+							    	p.style.backgroundColor = "";
+							    }
+							    if (fnvalue.length < 1) { // check the password
+								    fn.style.backgroundColor = "pink";
+								    errMsg += "First name required.<br/>";
+							    } else {
+							    	fn.style.backgroundColor = "";
+							    }
+							    if (lnvalue.length < 1) { // check the password
+								    ln.style.backgroundColor = "pink";
+								    errMsg += "Last name required.<br/>";
+							    } else {
+							    	ln.style.backgroundColor = "";
+							    }
+							    
+							    if (errMsg.length > 0) { // if there is an error message then don't submit
+							    	YAHOO.util.Dom.get("loadingMessage").style.display="none";
+							    	errWindow.style.display="block";
+							    	errWindow.innerHTML = errMsg;
+							    } else {
+							    	u.style.backgroundColor = "";
+							    	p.style.backgroundColor = "";
+							    	fn.style.backgroundColor = "";
+							    	ln.style.backgroundColor = "";
+							    	errWindow.style.display="none";
+							    	errWindow.innerHTML = "";
+							    	new ajaxCall("mainContent","/register",uvalue + "," + pvalue + "," + fnvalue + "," + lnvalue);
+							    }
+							}
+							submitRegButton.on("click", submitRegButtonClick); // set the event listener for the loginbutton
+						// (END) submitRegButton controls
+						
+						// registerButton controls
+							var registerButton = new YAHOO.widget.Button({
+								label: "Register", 
+								id: "registerButton1", 
+								container: "loginWindow_content"
+							});
+							YAHOO.util.Dom.get("loadingMessage").style.display="none"; // hide the loading message
+							function registerButtonClick(onClickEvent) { // onclick function called when loginbutton is clicked
+							    //var u = YAHOO.util.Dom.get("loginname").value;
+							    //var p = YAHOO.util.Dom.get("loginpass").value;
+							    //new ajaxCall("mainContent","/login",u + "," + p);
+							    // TODO make a register panel
+							    YAHOO.util.Dom.get("loadingMessage").style.display="none";
+							    registerPanel.show();
+								//YAHOO.util.Dom.get("registerDialog").style.display="block";
+							}
+							registerButton.on("click", registerButtonClick); // set the event listener for the loginbutton
+						// (END) registerButton controls
+						// logoutButton controls - no matter what add the logout button to the logoutWindow div
+							var logoutButton = new YAHOO.widget.Button({
+								label: "Logout", 
+								id: "logoutButton1", 
+								container: "logoutWindow"
+							});
+							function logoutButtonClick(p_oEvent) {
+								YAHOO.util.Dom.get("loadingMessage").style.display="block";
+							    new ajaxCall("mainContent","/login","/logout/");
+							}
+							logoutButton.on("click", logoutButtonClick);
+						// (END) logoutButton controls
+						if (dataArr.length === 1 && dataArr[0].indexOf("false") > -1) { // if user is not logged in
+							//YAHOO.util.Dom.get("loginWindow").style.display="block"; // show the logout window
+							loginPanel.show();
+						} else { // user is logged in already
+							YAHOO.util.Dom.get("logoutWindow").style.display="block"; // show the logout window
+						}
+						// TODO insert main page content here
+						YAHOO.util.Dom.get("loadingMessage").style.display="none";
+						YAHOO.util.Dom.get("coverDiv").style.display="none";
+					} else if (action === "/login") {
+						if (args !== "/logout/") { // if a login was processed
+							// Currently returns a list of logged in users
+							if (d.indexOf("success") > -1) { // login success
+								loginPanel.hide();
+								YAHOO.util.Dom.get("logoutWindow").style.display="block";
+							} else { // login failure
+								alert("login failure");
+							}
+						} else { // a logout was processed
+							// what to do when logout button was clicked
+							loginPanel.show();
+							YAHOO.util.Dom.get("logoutWindow").style.display="none";
+						}
+						YAHOO.util.Dom.get("loadingMessage").style.display="none";
+					} else if (action === "/register") {
+						// TODO do something upon registering
+						YAHOO.util.Dom.get("loadingMessage").style.display="none";
+						if (d.indexOf("success") > -1) { // registration success
+							registerPanel.hide();
+							loginPanel.hide();
+							//YAHOO.util.Dom.get("loginWindow").style.display="none";
+							YAHOO.util.Dom.get("logoutWindow").style.display="block";
+							
+						} else { // login failure
+							alert("registration failure");
+						}
+					}
+				}
+			};
+			this.handleFailure = function(o) {
+				if (o.responseText !== undefined) {
+					div.innerHTML = "There was an error, please refresh.<br/><li>Transaction id: " + o.tId + "</li>";
+					div.innerHTML += "<li>HTTP status: " + o.status + "</li>";
+					div.innerHTML += "<li>Status code message: " + o.statusText + "</li>";
+					YAHOO.util.Dom.get("loadingMessage").style.display="none";
+				}
+			};
+			this.callback = {
+				success:this.handleSuccess,
+				failure:this.handleFailure
+			};
+			this.sUrl = action;
+			//this.postData = "method=" + divId + "&action=" + action + "&args=" + args;
+			this.postData = "args=" + args;
+			this.request = YAHOO.util.Connect.asyncRequest('POST', this.sUrl, this.callback, this.postData);
+		};
+	</script>
+	<div id="coverDiv" style="position:absolute;width:100%;height:100%;z-index:9999;background-color:#FFFFFF">&nbsp;</div>
+	<div id="mainContent" style="" align="center"> <!-- width:100%;border:1px solid #000000;padding-top:20px;padding-bottom:20px;background-color:#AACCCC; -->
+		<div style="" id="loginWindow"> <!--  width:300px;border:3px double #000000;padding:15px;background-color:#FFFFCC;  -->
+			<div class="bd" id="loginWindow_content">
+				Username: <input type='text' id='loginname' style="font-size:9pt;"/><br/><br/>
+				Password: <input type='password' id='loginpass' style="font-size:9pt;"/><br/><br/>
+				<div id="loginWindow_error" style="line-height:18px;display:none;padding-bottom:9px;font-size:9pt;width:75%;font-weight:bold;font-style:italic;"></div>
+			</div>
+		</div>
+		<div style="display:none;" id="logoutWindow">
+			
+		</div>
+		<!-- input type='text' id='name'/>
+		<input type='text' id='pass'/>
+		<input type='button' value='register' onclick='var n=document.getElementById("name").value;var p = document.getElementById("pass").value;var go = new ajaxCall("mainContent","/register",n + "," + p);' / -->
+	</div>
+	<div id="registerPanel" style="" align="center">
+		<div class="bd" id="registerPanel_content">
+			<table>
+			<tr><td>Username(email):</td><td><input type='text' id='regU' style="font-size:9pt;"/></td></tr>
+			<tr><td>Password:</td><td><input type='password' id='regP' style="font-size:9pt;"/></td></tr>
+			<tr><td>First name:</td><td><input type='text' id='regFN' style="font-size:9pt;"/></td></tr>
+			<tr><td>Last name:</td><td><input type='password' id='regLN' style="font-size:9pt;"/></td></tr>
+			</table>
+			<div id="registerPanel_error" style="line-height:18px;display:none;padding-bottom:9px;font-size:9pt;width:75%;font-weight:bold;font-style:italic;"></div>
+		</div>
+	</div>
+	<div id="loadingMessage" style="z-index:10000;position:absolute;top:0;left:0;padding:3px;font-size:10pt;background-color:#000000;color:#FFFFFF;">
+		<span style="font-weight:bold;">Loading...</span>
+	</div>
+  </body>
+</html>
